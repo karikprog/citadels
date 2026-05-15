@@ -6,8 +6,11 @@ class ClassicMoveValidator : MoveValidator {
     override fun canExecute(action: GameAction, state: GameState): ValidationResult {
         val player = state.activePlayer ?: return ValidationResult.Invalid("Нет активного игрока")
 
-        if (state.gamePhase is DraftPhase) {
+        if (state.gamePhase is DraftPhase && action !is SelectCharacterAction && action !is EndDraftAction) {
             return ValidationResult.Invalid("Сейчас фаза выбора персонажей (Draft Phase)")
+        }
+        if (state.gamePhase is TurnPhase && action is SelectCharacterAction) {
+            return ValidationResult.Invalid("Сечас фаза хода")
         }
 
         val actionRank = getActionRank(action)
@@ -20,6 +23,7 @@ class ClassicMoveValidator : MoveValidator {
         }
 
         return when (action) {
+            is SelectCharacterAction -> canSelectCharacter(action.selectedCharacter, state)
             is CollectGoldAction -> canCollectResources(player)
             is DrowCardAction -> canCollectResources(player)
 
@@ -37,6 +41,9 @@ class ClassicMoveValidator : MoveValidator {
             is UseArchitectBuildAction -> canBuildMultiple(player, action.cards)
             is UseSmithyCardAction -> canUseSmithy(player)
             is UseLaboratoryCardAction -> canUseLaboratory(player, action.card)
+            is EndTurnAction -> canEndTurn(player)
+            is EndDraftAction -> canEndDraftTurn(player, state)
+            is PassiveTakeGoldAction -> canTakePassiveGold(player)
 
             else -> ValidationResult.Valid
         }
@@ -87,6 +94,13 @@ class ClassicMoveValidator : MoveValidator {
         if (victimRank == 1) return ValidationResult.Invalid("Ассасин не может убить самого себя")
         if (victimRank !in 2..8) return ValidationResult.Invalid("Некорректный ранг для убийства")
         return ValidationResult.Valid
+    }
+
+    private fun canEndDraftTurn(player: Player, state: GameState): ValidationResult {
+        if (player.character in 1..8) {
+            return ValidationResult.Valid
+        }
+        return ValidationResult.Invalid("Игрок должен выбрать персонажа")
     }
 
     private fun canStealFrom(player: Player, robbedRank: Int, state: GameState): ValidationResult {
@@ -184,6 +198,27 @@ class ClassicMoveValidator : MoveValidator {
         return ValidationResult.Valid
     }
 
+    private fun canSelectCharacter(characterRank: Int, state: GameState): ValidationResult {
+        if (!state.availableCharacter.any() { it.rank == characterRank }) {
+            return ValidationResult.Invalid("Выбранный ранга нет в доступных")
+        }
+        return ValidationResult.Valid
+    }
+
+    private fun canEndTurn(player: Player) : ValidationResult {
+        if (!player.hasTakenResources) {
+            return ValidationResult.Invalid("Игрок за ход должен собрать ресурсы")
+        }
+        return ValidationResult.Valid
+    }
+
+    private fun canTakePassiveGold(player: Player) : ValidationResult {
+        if (!player.hasCollectedIncome) {
+            return ValidationResult.Invalid("Игрок уже брал золото за кварталы")
+        }
+        return ValidationResult.Valid
+    }
+
 
     private fun getActionRank(action: GameAction): Int? {
         return when (action) {
@@ -199,6 +234,9 @@ class ClassicMoveValidator : MoveValidator {
             is UseThiefAction -> 2
             is UseSwapOtherPlayerMagicianAction -> 3
             is UseSwapDeckMagicianAction -> 3
+            is EndTurnAction -> action.rank
+            is EndDraftAction -> action.player.character
+            is PassiveTakeGoldAction -> action.rank
             else -> null
         }
     }

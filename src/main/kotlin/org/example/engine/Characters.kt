@@ -4,27 +4,27 @@ enum class Color {
     GREEN, BLUE, RED, YELLOW, LILAC, GREY
 }
 
-abstract class Character(
+abstract class GameCharacter(
     val rank: Int,
     val name: String,
     val color: Color
 ) {
 }
 
-class Assassin : Character(1, "Assassin", Color.GREY)
+class Assassin : GameCharacter(1, "Assassin", Color.GREY)
 
-class Thief : Character(2, "Thief", Color.GREY)
+class Thief : GameCharacter(2, "Thief", Color.GREY)
 
-class Magician : Character(3, "Magician", Color.GREY)
+class Magician : GameCharacter(3, "Magician", Color.GREY)
 
-class Warlord : Character(8, "Warlord", Color.RED)
+class Warlord : GameCharacter(8, "Warlord", Color.RED)
 
-class Bishop : Character(5, "Bishop", Color.BLUE)
+class Bishop : GameCharacter(5, "Bishop", Color.BLUE)
 
-class Merchant : Character(6, "Merchant", Color.GREEN)
+class Merchant : GameCharacter(6, "Merchant", Color.GREEN)
 
-class King : Character(4, "King", Color.YELLOW)
+class King : GameCharacter(4, "King", Color.YELLOW)
 
-class Architect : Character(7, "Architect", Color.GREY)
+class Architect : GameCharacter(7, "Architect", Color.GREY)
 
 

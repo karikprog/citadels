@@ -6,9 +6,18 @@ abstract class GameAction {
     abstract fun execute(state: GameState)
 }
 
-class SelectCharacterAction(val selectedCharacter: Character, val player: Player) : GameAction() {
+class SelectCharacterAction(val selectedCharacter: Int, val player: Player) : GameAction() {
     override fun execute(state: GameState) {
-       TODO("Implement this")
+        require(player == state.activePlayer) {
+            "The transferred player and the active player do not match"
+        }
+        val character = state.availableCharacter.find { it.rank == selectedCharacter }
+        require(character != null) {
+            "The character $selectedCharacter is not available"
+        }
+
+        player.setCharacter(character)
+        state.selectCharacter(character)
     }
 }
 
@@ -21,7 +30,7 @@ class CollectGoldAction(
         require(player.character == rank) { "Players rank ${player.character} does not match rank $rank" }
 
         player.addGold(2)
-        player.hasTakenResources = true
+        player.takeResources()
     }
 }
 
@@ -38,6 +47,7 @@ class DrowCardAction(val rank: Int) : GameAction() {
         for (i in 1..cardsCount) {
             player.temporaryHand.addLast(state.selectDistrict())
         }
+        player.takeResources()
     }
 }
 
@@ -58,7 +68,7 @@ class CollectCardAction(val rank: Int, val cardInx: Int) : GameAction() {
             }
         }
         player.temporaryHand.clear()
-        player.hasTakenResources = true
+        player.takeResources()
     }
 }
 
@@ -83,11 +93,11 @@ class UseThiefAction(val rank: Int, val robbedRank: Int) : GameAction() {
         }
         require(robbedRank != 1) { "The player ${player.character} cannot steal from the assassin" }
 
-        val robbedPlayer = state.players.find { it.character == robbedRank }
-        if (robbedPlayer != null) {
-            player.addGold(robbedPlayer.gold)
-            robbedPlayer.robbed()
-        }
+        // val robbedPlayer = state.players.find { it.character == robbedRank }
+        //   if (robbedPlayer != null) {
+        //         player.addGold(robbedPlayer.gold)
+        //           robbedPlayer.robbed()
+//        }
     }
 }
 
@@ -205,6 +215,37 @@ class UseLaboratoryCardAction(val rank: Int, val card: District) : GameAction() 
     }
 }
 
+class EndTurnAction(val rank: Int) : GameAction() {
+    override fun execute(state: GameState) {
+        val player = state.activePlayer ?: return
+        require(player.character == rank) {
+            "Players rank ${player.character} not match rank $rank"
+        }
+        require(player.hasTakenResources) { "During his turn, the player $player must take resources" }
+        player.resetTurnFlags()
+    }
+}
+
+class EndDraftAction(val player: Player) : GameAction() {
+    override fun execute(state: GameState) {
+        val activePlayer = state.activePlayer ?: return
+        require(player == activePlayer) {
+            "The active player does not match the transmitted one"
+        }
+
+    }
+}
+
+class PassiveTakeGoldAction(val rank: Int) : GameAction() {
+    override fun execute(state: GameState) {
+        val player = state.activePlayer ?: return
+        require(player.character == rank) {
+            "Players rank ${player.character} not match rank $rank"
+        }
+        require(player.hasCollectedIncome) {"Player already collected income"}
+        player.passiveTakeGold()
+    }
+}
 
 
 

@@ -1,15 +1,40 @@
 package org.example.utils
 
+import org.example.engine.Architect
+import org.example.engine.Assassin
+import org.example.engine.Bishop
 import org.example.engine.Color
 import org.example.engine.District
 import org.example.engine.DistrictType
+import org.example.engine.GameCharacter
+import org.example.engine.King
+import org.example.engine.Magician
+import org.example.engine.Merchant
 import org.example.engine.SpecialDistrict
 import org.example.engine.StandardDistrict
+import org.example.engine.Thief
+import org.example.engine.Warlord
 
 
 class Settings {
     val playerCount = 6
-    val districtCardCount = 66
+    val districtCardCount = 65
+
+    fun generateCharacters(): MutableList<GameCharacter> {
+        val characters = mutableListOf<GameCharacter>()
+        repeat(8) {
+            characters.add(Assassin())
+            characters.add(Thief())
+            characters.add(Magician())
+            characters.add(King())
+            characters.add(Warlord())
+            characters.add(Bishop())
+            characters.add(Architect())
+            characters.add(Merchant())
+        }
+        characters.shuffle()
+        return characters
+    }
 
     fun generateCitadelsDeck(): List<District> {
         val deck = mutableListOf<District>()
@@ -29,7 +54,6 @@ class Settings {
         addStandard(4, DistrictType.CASTLE, "Замок", 4, Color.YELLOW)
         addStandard(3, DistrictType.PALACE, "Палаццо", 5, Color.YELLOW)
 
-        // --- КРАСНЫЕ ---
         addStandard(3, DistrictType.WATCHTOWER, "Дозорная Башня", 1, Color.RED)
         addStandard(3, DistrictType.PRISON, "Тюрьма", 2, Color.RED)
         addStandard(3, DistrictType.BATTLEGROUND, "Марсово Поле", 3, Color.RED)
@@ -56,10 +80,11 @@ class Settings {
             DistrictType.SMITHY, "Кузня", 5, Color.LILAC,
             "Раз в ход можно заплатить 2 золотых, чтобы вытянуть 3 карты."
         ))
-        deck.add(SpecialDistrict(
-            DistrictType.GRAVEYARD, "Кладбище", 5, Color.LILAC,
-            "При разрушении квартала можно заплатить 1 золотой, чтобы забрать его в руку."
-        ))
+        //Будет в дальнейшем реализована
+        //deck.add(SpecialDistrict(
+        //    DistrictType.GRAVEYARD, "Кладбище", 5, Color.LILAC,
+        //    "При разрушении квартала можно заплатить 1 золотой, чтобы забрать его в руку."
+        //))
         deck.add(SpecialDistrict(
             DistrictType.OBSERVATORY, "Обсерватория", 5, Color.LILAC,
             "При взятии карт: тяни 3, оставь 1, остальные под низ колоды."
