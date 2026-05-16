@@ -94,7 +94,7 @@ class Player(val id: UUID, initialName: String) {
         }
         require(city.size < 7) { "The city is already completed" }
         val cardToBuild = _hand.find { it.type == districtType }
-        require(!containsHand(districtType)) { "District ${districtType.name} already built" }
+        require(!containsCity(districtType)) { "District ${districtType.name} already built" }
         require(cardToBuild != null) { "Player $districtType does not have a card to build district" }
         require(gold >= cardToBuild.cost) { "Player $id doesn't have enough gold to build district" }
         _city.add(cardToBuild)

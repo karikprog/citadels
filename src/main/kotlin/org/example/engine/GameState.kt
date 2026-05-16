@@ -44,6 +44,10 @@ class GameState(private val _players: List<Player>) {
         _availableCharacter.remove(character)
     }
 
+    fun clearAvailableCharacter() {
+        _availableCharacter.clear()
+    }
+
     fun gameOver() {
         gameOver = true
     }
@@ -56,12 +60,13 @@ abstract class GamePhase {
 class TurnPhase : GamePhase() {
     override fun handle(state: GameState) {
         state.changeGamePhase(this)
-        state.activePlayer = state.players.find { it.character == 1 }
+        state.activePlayer = null
     }
 }
 
 class DraftPhase : GamePhase() {
     override fun handle(state: GameState) {
+        state.clearAvailableCharacter()
         val characters = state.settings.generateCharacters()
         // Правила игры для 6 человек
         val randomChar = characters.randomOrNull()

@@ -22,7 +22,6 @@ class Settings {
 
     fun generateCharacters(): MutableList<GameCharacter> {
         val characters = mutableListOf<GameCharacter>()
-        repeat(8) {
             characters.add(Assassin())
             characters.add(Thief())
             characters.add(Magician())
@@ -31,7 +30,6 @@ class Settings {
             characters.add(Bishop())
             characters.add(Architect())
             characters.add(Merchant())
-        }
         characters.shuffle()
         return characters
     }

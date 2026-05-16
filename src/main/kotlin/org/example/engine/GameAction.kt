@@ -11,6 +11,9 @@ class SelectCharacterAction(val selectedCharacter: Int, val player: Player) : Ga
         require(player == state.activePlayer) {
             "The transferred player and the active player do not match"
         }
+        require(player.character == 0) {
+            "The player already selected character"
+        }
         val character = state.availableCharacter.find { it.rank == selectedCharacter }
         require(character != null) {
             "The character $selectedCharacter is not available"

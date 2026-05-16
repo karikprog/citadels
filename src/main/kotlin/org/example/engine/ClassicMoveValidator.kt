@@ -23,7 +23,7 @@ class ClassicMoveValidator : MoveValidator {
         }
 
         return when (action) {
-            is SelectCharacterAction -> canSelectCharacter(action.selectedCharacter, state)
+            is SelectCharacterAction -> canSelectCharacter(action.selectedCharacter, player, state)
             is CollectGoldAction -> canCollectResources(player)
             is DrowCardAction -> canCollectResources(player)
 
@@ -198,22 +198,24 @@ class ClassicMoveValidator : MoveValidator {
         return ValidationResult.Valid
     }
 
-    private fun canSelectCharacter(characterRank: Int, state: GameState): ValidationResult {
-        if (!state.availableCharacter.any() { it.rank == characterRank }) {
+    private fun canSelectCharacter(selectedRank: Int, player: Player, state: GameState): ValidationResult {
+        if (!state.availableCharacter.any() { it.rank == selectedRank }) {
             return ValidationResult.Invalid("Выбранный ранга нет в доступных")
+        } else if (player.character != 0) {
+            return ValidationResult.Invalid("Игрок уже выбрал персонажа")
         }
         return ValidationResult.Valid
     }
 
-    private fun canEndTurn(player: Player) : ValidationResult {
+    private fun canEndTurn(player: Player): ValidationResult {
         if (!player.hasTakenResources) {
             return ValidationResult.Invalid("Игрок за ход должен собрать ресурсы")
         }
         return ValidationResult.Valid
     }
 
-    private fun canTakePassiveGold(player: Player) : ValidationResult {
-        if (!player.hasCollectedIncome) {
+    private fun canTakePassiveGold(player: Player): ValidationResult {
+        if (player.hasCollectedIncome) {
             return ValidationResult.Invalid("Игрок уже брал золото за кварталы")
         }
         return ValidationResult.Valid

@@ -11,7 +11,7 @@ class CitadelsEngine(
     private val settings: Settings,
     private val _state: GameState,
     private val _validator: MoveValidator,
-    private val _recorder: HistoryRecorder,
+    //private val _recorder: HistoryRecorder,
 ) {
     fun startEngine() {
         println("Движок запускается")
@@ -43,10 +43,12 @@ class CitadelsEngine(
     }
 
     private fun moveDraftNextTurn() {
-        val charactersPicked = _state.players.count {it.character != 0}
-        if (charactersPicked  == _state.players.size) {
+        val charactersPicked = _state.players.count { it.character != 0 }
+        if (charactersPicked == _state.players.size) {
             _state.changeGamePhase(TurnPhase())
             _state.gamePhase?.handle(_state)
+            moveNextTurn()
+            return
         }
         _state.switchDraftPlayer()
     }
@@ -81,18 +83,25 @@ class CitadelsEngine(
             // Passive merchant ability
             if (nextPlayer.character == 6) {
                 nextPlayer.addGold(1)
+            } else if (nextPlayer.character == 7) {
+                println("Зодчий получает 2 карты на руку")
+                repeat(2) {
+                    nextPlayer.addHand(_state.selectDistrict())
+                }
+
             }
+
 
             println("Вызывается ранг $rankToSearch: ${nextPlayer.name}")
             return
         }
 
         handleRoundEnd()
-        }
+    }
 
     private fun handleRoundEnd() {
         println("Все персонажи завершили свои ходы")
-        if (_state.players.any() {it.city.size == 7}) {
+        if (_state.players.any() { it.city.size == 7 }) {
             println("Игра закончена")
             endGame()
         } else {
@@ -103,8 +112,8 @@ class CitadelsEngine(
 
     private fun endGame() {
         _state.gameOver()
-        val scores = _state.players.associateWith {
-            player -> player.getScore()
+        val scores = _state.players.associateWith { player ->
+            player.getScore()
         }
 
         val sortedScores = _state.players.sortedWith(
