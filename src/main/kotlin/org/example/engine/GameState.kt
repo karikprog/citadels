@@ -21,6 +21,10 @@ class GameState(private val _players: List<Player>) {
         _districtsQueue.addLast(district)
     }
 
+    fun isDistrictDeckEmpty(): Boolean {
+        return _districtsQueue.isEmpty()
+    }
+
     fun switchDraftPlayer() {
         val currentIndex = players.indexOf(activePlayer)
         activePlayer = _players[(currentIndex + 1) % _players.size]

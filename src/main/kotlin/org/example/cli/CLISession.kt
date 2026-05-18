@@ -40,9 +40,9 @@ class CLISession(
                         }
                     }
                 } catch (e: IllegalArgumentException) {
-                    println("💥 Критическая ошибка правил (execute): ${e.message}")
+                    println("Критическая ошибка правил (execute): ${e.message}")
                 } catch (e: Exception) {
-                    println("💥 Системная ошибка: ${e.message}")
+                    println("Системная ошибка: ${e.message}")
                 }
             }
         }

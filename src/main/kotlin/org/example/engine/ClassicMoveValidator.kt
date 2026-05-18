@@ -191,9 +191,13 @@ class ClassicMoveValidator : MoveValidator {
     }
 
     private fun canSwapCardsWithDeck(player: Player, cards: List<District>): ValidationResult {
-        if (cards.isEmpty()) return ValidationResult.Invalid("Нужно выбрать хотя бы одну карту для обмена")
+        if (cards.isEmpty()) return ValidationResult.Invalid("Нужно выбрать хотя бы одну карту")
+
+        val handCopy = player.hand.toMutableList()
         for (card in cards) {
-            if (card !in player.hand) return ValidationResult.Invalid("Карты ${card.name} нет в руке")
+            if (!handCopy.remove(card)) {
+                return ValidationResult.Invalid("Карты ${card.name} нет в руке (или недостаточно копий)")
+            }
         }
         return ValidationResult.Valid
     }

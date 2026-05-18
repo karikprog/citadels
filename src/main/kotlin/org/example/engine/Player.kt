@@ -31,6 +31,7 @@ class Player(val id: UUID, initialName: String) {
         private set
 
     var hasTakenResources = false
+        private set
 
     fun getScore(): Int {
         var score = 0
@@ -51,7 +52,7 @@ class Player(val id: UUID, initialName: String) {
         return score
     }
 
-    fun takeResources() {
+    fun takeResourcesFlag() {
         hasTakenResources = true
     }
 
@@ -83,7 +84,7 @@ class Player(val id: UUID, initialName: String) {
         isAssassinated = true
     }
 
-    fun robbed() {
+    fun robbedFlag() {
         gold = 0
         isRobbed = true
     }
@@ -92,7 +93,6 @@ class Player(val id: UUID, initialName: String) {
         if (_city.any() { it.type == districtType }) {
             return
         }
-        require(city.size < 7) { "The city is already completed" }
         val cardToBuild = _hand.find { it.type == districtType }
         require(!containsCity(districtType)) { "District ${districtType.name} already built" }
         require(cardToBuild != null) { "Player $districtType does not have a card to build district" }
@@ -117,7 +117,7 @@ class Player(val id: UUID, initialName: String) {
     }
 
     fun deleteCardFromCity(cityToDelete: District) {
-        _hand.remove(cityToDelete)
+        _city.remove(cityToDelete)
     }
 
     fun addDestroyedDistrict(district: District) {
@@ -149,9 +149,10 @@ class Player(val id: UUID, initialName: String) {
 
     fun resetTurnFlags() {
         isRobbed = false
-        isRobbed = false
+        isAssassinated = false
         hasBuildThisTurn = false
         hasCollectedIncome = false
+        hasTakenResources = false
     }
 
     fun resetCharacter() {
