@@ -2,32 +2,21 @@ package org.example.user
 
 import org.example.repository.MatchRepository
 import org.example.repository.MatchSummary
+import org.example.repository.User
+import org.example.repository.UserStats
 import java.util.UUID
 
-class LeaderboardService(private val _mathRepository: MatchRepository) {
+class LeaderboardService(private val repo: MatchRepository) {
+
     fun getTopPlayers(limit: Int): List<User> {
-        TODO("Implement")
+        return repo.getTopPlayers(limit)
     }
 
     fun getUserStats(userId: UUID): UserStats {
-        TODO("Implementation")
+        return repo.getUserStats(userId)
     }
 
     fun updateRatingsAfterMatch(matchSummary: MatchSummary) {
-        TODO("Imp")
+        repo.updateRatingsAfterMatch(matchSummary)
     }
 }
-
-data class User(
-    val id: UUID,
-    val name: String,
-    var rating: Int,
-    var totalGames: Int
-)
-
-data class UserStats(
-    val id: UUID,
-    val totalGames: Int,
-    val winGames: Int,
-    val rating: Int
-)

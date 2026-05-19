@@ -45,9 +45,9 @@ class CitadelsEngineTest {
             assertNotNull(player)
             val action = SelectCharacterAction(available[i].rank, player)
             val result = engine.processAction(action)
-            assertTrue(result is ValidationResult.Valid, "Draft $i failed: $result")
+            assertTrue(result is ProcessResult.Valid, "Draft $i failed: $result")
             val endResult = engine.processAction(EndDraftAction(player))
-            assertTrue(endResult is ValidationResult.Valid, "EndDraft $i failed: $endResult")
+            assertTrue(endResult is ProcessResult.Valid, "EndDraft $i failed: $endResult")
         }
         assertTrue(state.gamePhase is TurnPhase, "Should be in TurnPhase after draft")
     }
@@ -60,7 +60,7 @@ class CitadelsEngineTest {
         engine.startEngine()
 
         val result = engine.processAction(CollectGoldAction(4))
-        assertTrue(result is ValidationResult.Invalid)
+        assertTrue(result is ProcessResult.Invalid)
     }
 
     @Test
@@ -72,7 +72,7 @@ class CitadelsEngineTest {
 
         val goldBefore = state.activePlayer?.gold ?: -1
         val result = engine.processAction(CollectGoldAction(4))
-        assertTrue(result is ValidationResult.Invalid)
+        assertTrue(result is ProcessResult.Invalid)
         assertEquals(goldBefore, state.activePlayer?.gold)
     }
 
@@ -106,33 +106,33 @@ class CitadelsEngineTest {
     fun `assassinated player is skipped in turn order`() {
         val players = createPlayers()
         val assassinatedPlayer = players[0]
-        assassinatedPlayer.setCharacter(Assassin())
+        assassinatedPlayer.setCharacter(Assassin)
 
         val state = GameState(players)
-        state.changeGamePhase(TurnPhase())
+        state.changeGamePhase(TurnPhase)
         state.activePlayer = assassinatedPlayer
         assassinatedPlayer.assassinated()
         val engine = CitadelsEngine(Settings(), state, ClassicMoveValidator())
 
         val thief = players[1]
-        thief.setCharacter(Thief())
+        thief.setCharacter(Thief)
         state.activePlayer = thief
 
         val king = players[2]
-        king.setCharacter(King())
+        king.setCharacter(King)
         val gold = 5
         king.addGold(gold)
         king.robbedFlag()
         state.activePlayer = king
 
         val merchant = players[3]
-        merchant.setCharacter(Merchant())
+        merchant.setCharacter(Merchant)
 
         val architect = players[4]
-        architect.setCharacter(Architect())
+        architect.setCharacter(Architect)
 
         val warlord = players[5]
-        warlord.setCharacter(Warlord())
+        warlord.setCharacter(Warlord)
 
         state.activePlayer = assassinatedPlayer
         engine.processAction(EndTurnAction(1))
@@ -203,9 +203,9 @@ class CitadelsEngineTest {
     @Test
     fun `Merchant gets passive gold at turn start`() {
         val players = createPlayers()
-        players[0].setCharacter(Merchant())
+        players[0].setCharacter(Merchant)
         val state = GameState(players)
-        state.changeGamePhase(TurnPhase())
+        state.changeGamePhase(TurnPhase)
         state.activePlayer = players[0]
         val engine = CitadelsEngine(Settings(), state, ClassicMoveValidator())
 

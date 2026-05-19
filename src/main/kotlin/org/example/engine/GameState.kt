@@ -57,34 +57,3 @@ class GameState(private val _players: List<Player>) {
     }
 }
 
-abstract class GamePhase {
-    abstract fun handle(state: GameState)
-}
-
-class TurnPhase : GamePhase() {
-    override fun handle(state: GameState) {
-        state.changeGamePhase(this)
-        state.activePlayer = null
-    }
-}
-
-class DraftPhase : GamePhase() {
-    override fun handle(state: GameState) {
-        state.clearAvailableCharacter()
-        val characters = state.settings.generateCharacters()
-        // Правила игры для 6 человек
-        val randomChar = characters.randomOrNull()
-        characters.remove(randomChar)
-        state.changeGamePhase(this)
-        for (character in characters) {
-            state.addDraftCharacter(character)
-        }
-        if (state.kingInd == -1) {
-            state.kingInd = state.players.indices.random()
-        }
-        for (player in state.players) {
-            player.resetCharacter()
-        }
-        state.activePlayer = state.players[state.kingInd]
-    }
-}

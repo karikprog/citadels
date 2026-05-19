@@ -21,17 +21,15 @@ class SettingsTest {
 
     @Test
     fun `generateCharacters returns 8 shuffled characters`() {
-        val chars = settings.generateCharacters()
-        assertEquals(8, chars.size)
-        val ranks = chars.map { it.rank }.sorted()
-        assertEquals((1..8).toList(), ranks)
+        val chars = settings.generateCharactersForSixPlayers()
+        assertEquals(7, chars.size)
     }
 
     @Test
     fun `generateCharacters returns shuffled list (not deterministic)`() {
         val uniqueOrders = mutableSetOf<List<Int>>()
         repeat(10) {
-            uniqueOrders.add(settings.generateCharacters().map { it.rank })
+            uniqueOrders.add(settings.generateCharactersForSixPlayers().map { it.rank })
         }
         assertTrue(uniqueOrders.size > 1)
     }

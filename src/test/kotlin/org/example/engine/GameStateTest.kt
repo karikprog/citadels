@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -51,19 +50,19 @@ class GameStateTest {
     @Test
     fun `addDraftCharacter adds only in DraftPhase`() {
         val state = GameState(createPlayers())
-        state.addDraftCharacter(King())
+        state.addDraftCharacter(King)
         assertEquals(0, state.availableCharacter.size)
 
-        state.changeGamePhase(DraftPhase())
-        state.addDraftCharacter(King())
+        state.changeGamePhase(DraftPhase)
+        state.addDraftCharacter(King)
         assertEquals(1, state.availableCharacter.size)
     }
 
     @Test
     fun `selectCharacter removes from available`() {
         val state = GameState(createPlayers())
-        state.changeGamePhase(DraftPhase())
-        val king = King()
+        state.changeGamePhase(DraftPhase)
+        val king = King
         state.addDraftCharacter(king)
         state.selectCharacter(king)
         assertEquals(0, state.availableCharacter.size)
@@ -72,9 +71,9 @@ class GameStateTest {
     @Test
     fun `clearAvailableCharacter empties the list`() {
         val state = GameState(createPlayers())
-        state.changeGamePhase(DraftPhase())
-        state.addDraftCharacter(King())
-        state.addDraftCharacter(Thief())
+        state.changeGamePhase(DraftPhase)
+        state.addDraftCharacter(King)
+        state.addDraftCharacter(Thief)
         state.clearAvailableCharacter()
         assertEquals(0, state.availableCharacter.size)
     }
@@ -103,9 +102,9 @@ class GameStateTest {
     fun `changeGamePhase switches phase`() {
         val state = GameState(createPlayers())
         assertNull(state.gamePhase)
-        state.changeGamePhase(DraftPhase())
+        state.changeGamePhase(DraftPhase)
         assertTrue(state.gamePhase is DraftPhase)
-        state.changeGamePhase(TurnPhase())
+        state.changeGamePhase(TurnPhase)
         assertTrue(state.gamePhase is TurnPhase)
     }
 
@@ -120,7 +119,8 @@ class GameStateTest {
     fun `DraftPhase handle populates 7 characters for 6 players`() {
         val players = createPlayers(6)
         val state = GameState(players)
-        DraftPhase().handle(state)
+        state.changeGamePhase(DraftPhase)
+        DraftPhase.handle(state)
         assertTrue(state.gamePhase is DraftPhase)
         assertEquals(7, state.availableCharacter.size)
         val ranks = state.availableCharacter.map { it.rank }.toSet()
@@ -133,7 +133,7 @@ class GameStateTest {
         val players = createPlayers(6)
         val state = GameState(players)
         assertEquals(-1, state.kingInd)
-        DraftPhase().handle(state)
+        DraftPhase.handle(state)
         assertTrue(state.kingInd in 0..5)
     }
 
@@ -141,16 +141,16 @@ class GameStateTest {
     fun `DraftPhase handle sets activePlayer to king`() {
         val players = createPlayers(6)
         val state = GameState(players)
-        DraftPhase().handle(state)
+        DraftPhase.handle(state)
         assertEquals(state.players[state.kingInd], state.activePlayer)
     }
 
     @Test
     fun `DraftPhase handle resets all player characters`() {
         val players = createPlayers(6)
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val state = GameState(players)
-        DraftPhase().handle(state)
+        DraftPhase.handle(state)
         for (p in players) {
             assertEquals(0, p.character)
         }
@@ -161,7 +161,8 @@ class GameStateTest {
         val players = createPlayers(6)
         val state = GameState(players)
         state.activePlayer = players[0]
-        TurnPhase().handle(state)
+        state.changeGamePhase(TurnPhase)
+        TurnPhase.handle(state)
         assertTrue(state.gamePhase is TurnPhase)
         assertNull(state.activePlayer)
     }

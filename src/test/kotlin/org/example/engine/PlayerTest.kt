@@ -3,6 +3,8 @@ package org.example.engine
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -61,8 +63,9 @@ class PlayerTest {
     fun `spendGold does nothing when insufficient`() {
         val p = createPlayer()
         p.addGold(3)
-        p.spendGold(5)
-        assertEquals(3, p.gold)
+        assertFailsWith<IllegalArgumentException> {
+            p.spendGold(4)
+        }
     }
 
     @Test
@@ -107,14 +110,14 @@ class PlayerTest {
     @Test
     fun `setCharacter sets character and rank`() {
         val p = createPlayer()
-        p.setCharacter(King())
+        p.setCharacter(King)
         assertEquals(4, p.character)
     }
 
     @Test
     fun `resetCharacter clears character`() {
         val p = createPlayer()
-        p.setCharacter(King())
+        p.setCharacter(King)
         p.resetCharacter()
         assertEquals(0, p.character)
     }
@@ -186,9 +189,11 @@ class PlayerTest {
         p.addHand(district(DistrictType.MANOR, 1, Color.YELLOW))
         p.addHand(district(DistrictType.WATCHTOWER, 1, Color.RED))
         p.addHand(district(DistrictType.TAVERN, 1, Color.GREEN))
-        p.addHand(SpecialDistrict(
-            DistrictType.HAUNTED_QUARTER, "Haunted", 2, Color.LILAC, "wildcard"
-        ))
+        p.addHand(
+            SpecialDistrict(
+                DistrictType.HAUNTED_QUARTER, "Haunted", 2, Color.LILAC, "wildcard"
+            )
+        )
         p.addGold(10)
         for (t in listOf(
             DistrictType.TEMPLE, DistrictType.MANOR, DistrictType.WATCHTOWER,

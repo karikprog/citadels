@@ -63,9 +63,8 @@ class Player(val id: UUID, initialName: String) {
     }
 
     fun spendGold(coins: Int) {
-        if (coins <= gold) {
-            gold -= coins
-        }
+        require(coins <= gold) { "Player $id doesn't have enough gold to build district" }
+        gold -= coins
     }
 
     fun containsHand(districtType: DistrictType): Boolean {
@@ -96,10 +95,9 @@ class Player(val id: UUID, initialName: String) {
         val cardToBuild = _hand.find { it.type == districtType }
         require(!containsCity(districtType)) { "District ${districtType.name} already built" }
         require(cardToBuild != null) { "Player $districtType does not have a card to build district" }
-        require(gold >= cardToBuild.cost) { "Player $id doesn't have enough gold to build district" }
+        spendGold(cardToBuild.cost)
         _city.add(cardToBuild)
         _hand.remove(cardToBuild)
-        gold -= cardToBuild.cost
         hasBuildThisTurn = true
 
     }

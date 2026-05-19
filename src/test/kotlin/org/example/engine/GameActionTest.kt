@@ -20,7 +20,7 @@ class GameActionTest {
     private fun setupState(
         players: List<Player> = createPlayers(),
         activePlayer: Player? = null,
-        phase: GamePhase = TurnPhase(),
+        phase: GamePhase = TurnPhase,
         kingInd: Int = 0
     ): GameState {
         val state = GameState(players)
@@ -33,10 +33,10 @@ class GameActionTest {
     @Test
     fun `SelectCharacterAction selects available character`() {
         val players = createPlayers()
-        val state = setupState(players, players[0], DraftPhase())
-        val king = King()
+        val state = setupState(players, players[0], DraftPhase)
+        val king = King
         state.addDraftCharacter(king)
-        state.addDraftCharacter(Thief())
+        state.addDraftCharacter(Thief)
         val action = SelectCharacterAction(4, players[0])
         action.execute(state)
         assertEquals(4, players[0].character)
@@ -46,7 +46,7 @@ class GameActionTest {
     @Test
     fun `CollectGoldAction gives 2 gold`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val state = setupState(players, players[0])
         val action = CollectGoldAction(4)
         action.execute(state)
@@ -57,7 +57,7 @@ class GameActionTest {
     @Test
     fun `DrowCardAction draws 2 cards normally`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val state = setupState(players, players[0])
         repeat(5) { state.addDistrict(district(DistrictType.TAVERN)) }
         val action = DrowCardAction(4)
@@ -69,7 +69,7 @@ class GameActionTest {
     @Test
     fun `DrowCardAction draws 3 cards with Observatory`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val obs = SpecialDistrict(
             DistrictType.OBSERVATORY, "Observatory", 5, Color.LILAC, "draw 3"
         )
@@ -86,7 +86,7 @@ class GameActionTest {
     @Test
     fun `CollectCardAction keeps selected card`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val state = setupState(players, players[0])
         val d1 = district(DistrictType.TAVERN)
         val d2 = district(DistrictType.MARKET)
@@ -102,7 +102,7 @@ class GameActionTest {
     @Test
     fun `CollectCardAction with Library keeps all cards`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val lib = SpecialDistrict(
             DistrictType.LIBRARY, "Library", 6, Color.LILAC, "keep all"
         )
@@ -122,8 +122,8 @@ class GameActionTest {
     @Test
     fun `UseAssassinAction assassinates target player`() {
         val players = createPlayers()
-        players[0].setCharacter(Assassin())
-        players[1].setCharacter(King())
+        players[0].setCharacter(Assassin)
+        players[1].setCharacter(King)
         val state = setupState(players, players[0])
         val action = UseAssassinAction(1, 4)
         action.execute(state)
@@ -133,7 +133,7 @@ class GameActionTest {
     @Test
     fun `UseAssassinAction no-op when victim rank not owned`() {
         val players = createPlayers()
-        players[0].setCharacter(Assassin())
+        players[0].setCharacter(Assassin)
         val state = setupState(players, players[0])
         val action = UseAssassinAction(1, 7)
         action.execute(state)
@@ -142,7 +142,7 @@ class GameActionTest {
     @Test
     fun `BuildDistrictAction builds via player`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         players[0].addHand(district(DistrictType.TAVERN))
         players[0].addGold(5)
         players[0].takeResourcesFlag()
@@ -155,8 +155,8 @@ class GameActionTest {
     @Test
     fun `UseWarlordAction destroys opponent district`() {
         val players = createPlayers()
-        players[0].setCharacter(Warlord())
-        players[1].setCharacter(King())
+        players[0].setCharacter(Warlord)
+        players[1].setCharacter(King)
         val target = district(DistrictType.TAVERN)
         players[1].addHand(target)
         players[1].addGold(10)
@@ -174,8 +174,8 @@ class GameActionTest {
     @Test
     fun `UseWarlordAction respects Great Wall cost increase`() {
         val players = createPlayers()
-        players[0].setCharacter(Warlord())
-        players[1].setCharacter(King())
+        players[0].setCharacter(Warlord)
+        players[1].setCharacter(King)
         val wall = SpecialDistrict(
             DistrictType.GREAT_WALL, "Great Wall", 6, Color.LILAC, "cost +1"
         )
@@ -196,8 +196,8 @@ class GameActionTest {
     @Test
     fun `UseWarlordAction costs cost-1 without Great Wall`() {
         val players = createPlayers()
-        players[0].setCharacter(Warlord())
-        players[1].setCharacter(King())
+        players[0].setCharacter(Warlord)
+        players[1].setCharacter(King)
         players[1].addHand(district(DistrictType.TAVERN, 2))
         players[1].addGold(10)
         players[1].buildDistrict(DistrictType.TAVERN)
@@ -213,7 +213,7 @@ class GameActionTest {
     @Test
     fun `UseArchitectBuildAction builds up to 3 districts`() {
         val players = createPlayers()
-        players[0].setCharacter(Architect())
+        players[0].setCharacter(Architect)
         players[0].addHand(district(DistrictType.TAVERN))
         players[0].addHand(district(DistrictType.MARKET))
         players[0].addHand(district(DistrictType.TRADING_POST, 2))
@@ -229,7 +229,7 @@ class GameActionTest {
     @Test
     fun `UseSmithyCardAction pays 2 gold and draws 3 cards`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val smithy = SpecialDistrict(
             DistrictType.SMITHY, "Smithy", 5, Color.LILAC, "draw 3"
         )
@@ -247,7 +247,7 @@ class GameActionTest {
     @Test
     fun `UseLaboratoryCardAction discards card and gains 1 gold`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         val lab = SpecialDistrict(
             DistrictType.LABORATORY, "Lab", 5, Color.LILAC, "discard->gold"
         )
@@ -266,8 +266,8 @@ class GameActionTest {
     @Test
     fun `UseSwapOtherPlayerMagicianAction swaps hands`() {
         val players = createPlayers()
-        players[0].setCharacter(Magician())
-        players[1].setCharacter(King())
+        players[0].setCharacter(Magician)
+        players[1].setCharacter(King)
         players[0].addHand(district(DistrictType.TAVERN))
         players[1].addHand(district(DistrictType.MARKET))
         val state = setupState(players, players[0])
@@ -280,7 +280,7 @@ class GameActionTest {
     @Test
     fun `UseSwapDeckMagicianAction swaps cards with deck`() {
         val players = createPlayers()
-        players[0].setCharacter(Magician())
+        players[0].setCharacter(Magician)
         val d1 = district(DistrictType.TAVERN)
         players[0].addHand(d1)
         val state = setupState(players, players[0])
@@ -294,7 +294,7 @@ class GameActionTest {
     @Test
     fun `EndTurnAction resets flags`() {
         val players = createPlayers()
-        players[0].setCharacter(King())
+        players[0].setCharacter(King)
         players[0].takeResourcesFlag()
         val state = setupState(players, players[0])
         val action = EndTurnAction(4)
@@ -305,7 +305,7 @@ class GameActionTest {
     @Test
     fun `EndDraftAction succeeds for active player`() {
         val players = createPlayers()
-        val state = setupState(players, players[0], DraftPhase())
+        val state = setupState(players, players[0], DraftPhase)
         val action = EndDraftAction(players[0])
         action.execute(state)
     }

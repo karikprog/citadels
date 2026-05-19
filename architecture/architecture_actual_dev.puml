@@ -48,6 +48,10 @@ enum DistrictType {
     UNIVERSITY
 }
 
+enum SkipReason {
+    ASSASSINATED
+}
+
 ' --- Domain Model ---
 
 abstract class District {
@@ -104,9 +108,11 @@ class Player {
     +void passiveTakeGold()
     +void setCharacter(GameCharacter c)
     +void assassinated()
-    +void robbed()
+    +void robbedFlag()
     +void swapHandCards(Player other)
     +void deleteCardFromHand(District card)
+    +void deleteCardFromCity(District card)
+    +void addDestroyedDistrict(District card)
     +void resetTurnFlags()
 }
 
@@ -120,9 +126,15 @@ class GameState {
     +int kingInd
     +Settings settings
     +bool gameOver
+    +void addDistrict(District d)
     +void changeGamePhase(GamePhase phase)
     +District selectDistrict()
     +void selectCharacter(GameCharacter c)
+    +void addDraftCharacter(GameCharacter c)
+    +void clearAvailableCharacter()
+    +void switchDraftPlayer()
+    +bool isDistrictDeckEmpty()
+    +void gameOver()
 }
 
 class Settings {
@@ -143,7 +155,7 @@ class CitadelsEngine {
     -GameState state
     -MoveValidator validator
     +void startEngine()
-    +ValidationResult processAction(GameAction action)
+    +ProcessResult processAction(GameAction action)
 }
 
 interface MoveValidator {
@@ -152,9 +164,24 @@ interface MoveValidator {
 
 class ClassicMoveValidator implements MoveValidator
 
-class ValidationResult {
+sealed class ValidationResult {
     object Valid
     class Invalid(String reason)
+}
+
+sealed class ProcessResult {
+    class Valid(GameEvent[] events)
+    class Invalid(String reason)
+}
+
+sealed class GameEvent {
+    class PlayerSkipped(Player player, int rank, SkipReason reason)
+    class GoldStolen(Player thief, Player victim, int amount)
+    class ArchitectBonus(Player player)
+    class TurnStarted(Player player, int rank)
+    object RoundEnded
+    class GameOver(Map scores, Player winner, Player[] sortedPlayers)
+    object NewRound
 }
 
 ' --- Game Actions (Command Pattern) ---
@@ -191,67 +218,90 @@ class TurnPhase extends GamePhase
 
 ' --- CLI / User Interface ---
 
+class Main {
+    +void main()
+    -void startNewGame(MatchRepository repo)
+    -void showUserStats(MatchRepository repo)
+}
+
 class CLISession {
     -CitadelsEngine engine
     -GameState state
     -CommandHandler handler
     +void start()
     -void printGameState()
+    -void formatEvent(GameEvent event)
+}
+
+sealed class ParseResult {
+    class Success(GameAction action)
+    class Display(String message)
+    class Error(String message)
+    object Exit
 }
 
 class CommandHandler {
     -GameState state
-    +GameAction parse(String input)
+    +ParseResult parse(String input)
+    +MatchSummary saveFinishedMatch()
+    -String buildGameStats()
 }
 
-' --- Leaderboard & Users ---
-
-class User {
-    +UUID id
-    +String name
-    +int rating
-    +int totalGames
-}
-
-class LeaderboardService {
-    -MatchRepository repo
-    +List<User> getTopPlayers(int limit)
-    +UserStats getUserStats(UUID userId)
-    +void updateRatingsAfterMatch(MatchSummary result)
-}
-
-class UserStats {
-    +UUID id
-    +int totalGames
-    +int winGames
-    +int rating
-}
-
-' --- Event Sourcing & Persistence ---
+' --- Repository & Users ---
 
 interface MatchRepository {
-    +void saveRecordAction(UUID matchId)
+    +void saveRecordAction(UUID matchId, String actionDescription)
     +void saveCompletedMatch(UUID matchId, MatchSummary summary)
     +List<MatchSummary> getMatchHistoryForUser(UUID userId)
-    +void getMatchReplay(UUID matchId)
+    +List<String> getMatchReplay(UUID matchId)
+    +User getOrCreateUser(UUID id, String name)
+    +User findUserByName(String name)
+    +List<User> getTopPlayers(int limit)
+    +UserStats getUserStats(UUID userId)
+    +void updateRatingsAfterMatch(MatchSummary matchSummary)
+}
+
+class InMemoryMatchRepository implements MatchRepository {
+    -List<MatchSummary> matches
+    -Map<UUID, List<String>> replays
+    -Map<UUID, User> users
 }
 
 class HistoryRecorder {
     -UUID matchId
     -MatchRepository repo
-    +void record()
-}
-
-class MatchReplayer {
-    -MatchRepository repo
-    +void replayMatch(UUID matchId)
+    +void record(Player player, GameAction action)
 }
 
 class MatchSummary {
     +UUID matchId
     +UUID winnerUserId
     +Map<UUID, Int> finalScore
+    +Map<UUID, String> playerNames
     +Instant datePlayed
+}
+
+class User {
+    +UUID id
+    +String name
+    +int totalGames
+    +int winGames
+    +int rating (getter: winGames * 100 / totalGames)
+}
+
+class UserStats {
+    +UUID id
+    +int totalGames
+    +int winGames
+    +int losses
+    +int rating
+}
+
+class LeaderboardService {
+    -MatchRepository repo
+    +List<User> getTopPlayers(int limit)
+    +UserStats getUserStats(UUID userId)
+    +void updateRatingsAfterMatch(MatchSummary summary)
 }
 
 ' --- RELATIONS ---
@@ -267,27 +317,32 @@ Player "1" o-- "0..1" GameCharacter : role
 CitadelsEngine --> GameState : manages
 CitadelsEngine --> MoveValidator : uses
 CitadelsEngine ..> GameAction : executes
+CitadelsEngine ..> ProcessResult : returns
 GameAction ..> GameState : modifies
 GameState --> GamePhase : current
 GamePhase ..> GameState : transitions
+ProcessResult ..> GameEvent : contains
 
 ' Initialization
 Lobby ..> Player : creates
 Lobby ..> GameState : creates
 GameState --> Settings : config
+Main --> Lobby : creates
+Main --> CitadelsEngine : creates
+Main --> CLISession : creates
 
 ' CLI
 CLISession --> CitadelsEngine : drives
 CLISession --> CommandHandler : uses
+CLISession --> ParseResult : handles
+CLISession ..> GameEvent : formats
 CommandHandler ..> GameAction : parses
 CommandHandler --> GameState : reads
+CommandHandler ..> ParseResult : returns
 
 ' Repository
 HistoryRecorder --> MatchRepository : persists
-MatchReplayer --> MatchRepository : reads
-LeaderboardService --> MatchRepository : queries
-HistoryRecorder o-- MatchSummary : produces
-LeaderboardService ..> MatchSummary : analyzes
-LeaderboardService ..> UserStats : returns
+InMemoryMatchRepository ..> MatchRepository : implements
+LeaderboardService --> MatchRepository : delegates
 
 @enduml
