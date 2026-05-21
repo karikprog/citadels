@@ -1,0 +1,348 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' --- Core Enums ---
+
+enum Color {
+    GREEN
+    BLUE
+    RED
+    YELLOW
+    LILAC
+    GREY
+}
+
+enum DistrictType {
+    ' Blue
+    TEMPLE
+    CHURCH
+    MONASTERY
+    CATHEDRAL
+    ' Yellow
+    MANOR
+    CASTLE
+    PALACE
+    ' Red
+    WATCHTOWER
+    PRISON
+    BATTLEGROUND
+    FORTRESS
+    ' Green
+    TAVERN
+    MARKET
+    TRADING_POST
+    DOCKS
+    HARBOR
+    TOWN_HALL
+    ' Purple (special)
+    HAUNTED_QUARTER
+    KEEP
+    SMITHY
+    GRAVEYARD
+    OBSERVATORY
+    LABORATORY
+    LIBRARY
+    SCHOOL_OF_MAGIC
+    GREAT_WALL
+    DRAGON_GATE
+    UNIVERSITY
+}
+
+enum SkipReason {
+    ASSASSINATED
+}
+
+' --- Domain Model ---
+
+abstract class District {
+    +DistrictType type
+    +String name
+    +int cost
+    +Color color
+    {abstract} +int calculatePoints()
+}
+
+class StandardDistrict extends District {
+    +int calculatePoints()
+}
+
+class SpecialDistrict extends District {
+    +String effectDescription
+    +int calculatePoints()
+}
+
+abstract class GameCharacter {
+    +int rank
+    +String name
+    +Color color
+}
+
+class Assassin extends GameCharacter
+class Thief extends GameCharacter
+class Magician extends GameCharacter
+class King extends GameCharacter
+class Bishop extends GameCharacter
+class Merchant extends GameCharacter
+class Architect extends GameCharacter
+class Warlord extends GameCharacter
+
+class Player {
+    +UUID id
+    +String name
+    +int gold
+    +List<District> hand
+    +List<District> temporaryHand
+    +List<District> city
+    +List<District> destroyedDistricts
+    +int character
+    +bool isAssassinated
+    +bool isRobbed
+    +bool hasBuildThisTurn
+    +bool isFirstToFinish
+    +bool hasCollectedIncome
+    +bool hasTakenResources
+    +int getScore()
+    +void addGold(int coins)
+    +void spendGold(int coins)
+    +void buildDistrict(DistrictType type)
+    +void passiveTakeGold()
+    +void setCharacter(GameCharacter c)
+    +void assassinated()
+    +void robbedFlag()
+    +void swapHandCards(Player other)
+    +void deleteCardFromHand(District card)
+    +void deleteCardFromCity(District card)
+    +void addDestroyedDistrict(District card)
+    +void resetTurnFlags()
+}
+
+' --- Engine Core ---
+
+class GameState {
+    +List<Player> players
+    +List<GameCharacter> availableCharacter
+    +GamePhase gamePhase
+    +Player activePlayer
+    +int kingInd
+    +Settings settings
+    +bool gameOver
+    +void addDistrict(District d)
+    +void changeGamePhase(GamePhase phase)
+    +District selectDistrict()
+    +void selectCharacter(GameCharacter c)
+    +void addDraftCharacter(GameCharacter c)
+    +void clearAvailableCharacter()
+    +void switchDraftPlayer()
+    +bool isDistrictDeckEmpty()
+    +void gameOver()
+}
+
+class Settings {
+    +int playerCount
+    +int districtCardCount
+    +List<GameCharacter> generateCharacters()
+    +List<District> generateCitadelsDeck()
+}
+
+class Lobby {
+    +int playersSize
+    +void addPlayer(String name)
+    +GameState createGameState()
+}
+
+class CitadelsEngine {
+    -Settings settings
+    -GameState state
+    -MoveValidator validator
+    +void startEngine()
+    +ProcessResult processAction(GameAction action)
+}
+
+interface MoveValidator {
+    +ValidationResult canExecute(GameAction action, GameState state)
+}
+
+class ClassicMoveValidator implements MoveValidator
+
+sealed class ValidationResult {
+    object Valid
+    class Invalid(String reason)
+}
+
+sealed class ProcessResult {
+    class Valid(GameEvent[] events)
+    class Invalid(String reason)
+}
+
+sealed class GameEvent {
+    class PlayerSkipped(Player player, int rank, SkipReason reason)
+    class GoldStolen(Player thief, Player victim, int amount)
+    class ArchitectBonus(Player player)
+    class TurnStarted(Player player, int rank)
+    object RoundEnded
+    class GameOver(Map scores, Player winner, Player[] sortedPlayers)
+    object NewRound
+}
+
+' --- Game Actions (Command Pattern) ---
+
+abstract class GameAction {
+    {abstract} +void execute(GameState state)
+}
+
+class SelectCharacterAction extends GameAction
+class CollectGoldAction extends GameAction
+class DrowCardAction extends GameAction
+class CollectCardAction extends GameAction
+class UseAssassinAction extends GameAction
+class UseThiefAction extends GameAction
+class UseSwapOtherPlayerMagicianAction extends GameAction
+class UseSwapDeckMagicianAction extends GameAction
+class BuildDistrictAction extends GameAction
+class UseWarlordAction extends GameAction
+class UseArchitectBuildAction extends GameAction
+class UseSmithyCardAction extends GameAction
+class UseLaboratoryCardAction extends GameAction
+class EndTurnAction extends GameAction
+class EndDraftAction extends GameAction
+class PassiveTakeGoldAction extends GameAction
+
+' --- Game Phase (State Pattern) ---
+
+abstract class GamePhase {
+    {abstract} +void handle(GameState state)
+}
+
+class DraftPhase extends GamePhase
+class TurnPhase extends GamePhase
+
+' --- CLI / User Interface ---
+
+class Main {
+    +void main()
+    -void startNewGame(MatchRepository repo)
+    -void showUserStats(MatchRepository repo)
+}
+
+class CLISession {
+    -CitadelsEngine engine
+    -GameState state
+    -CommandHandler handler
+    +void start()
+    -void printGameState()
+    -void formatEvent(GameEvent event)
+}
+
+sealed class ParseResult {
+    class Success(GameAction action)
+    class Display(String message)
+    class Error(String message)
+    object Exit
+}
+
+class CommandHandler {
+    -GameState state
+    +ParseResult parse(String input)
+    +MatchSummary saveFinishedMatch()
+    -String buildGameStats()
+}
+
+' --- Repository & Users ---
+
+interface MatchRepository {
+    +void saveRecordAction(UUID matchId, String actionDescription)
+    +void saveCompletedMatch(UUID matchId, MatchSummary summary)
+    +List<MatchSummary> getMatchHistoryForUser(UUID userId)
+    +List<String> getMatchReplay(UUID matchId)
+    +User getOrCreateUser(UUID id, String name)
+    +User findUserByName(String name)
+    +List<User> getTopPlayers(int limit)
+    +UserStats getUserStats(UUID userId)
+    +void updateRatingsAfterMatch(MatchSummary matchSummary)
+}
+
+class InMemoryMatchRepository implements MatchRepository {
+    -List<MatchSummary> matches
+    -Map<UUID, List<String>> replays
+    -Map<UUID, User> users
+}
+
+class HistoryRecorder {
+    -UUID matchId
+    -MatchRepository repo
+    +void record(Player player, GameAction action)
+}
+
+class MatchSummary {
+    +UUID matchId
+    +UUID winnerUserId
+    +Map<UUID, Int> finalScore
+    +Map<UUID, String> playerNames
+    +Instant datePlayed
+}
+
+class User {
+    +UUID id
+    +String name
+    +int totalGames
+    +int winGames
+    +int rating (getter: winGames * 100 / totalGames)
+}
+
+class UserStats {
+    +UUID id
+    +int totalGames
+    +int winGames
+    +int losses
+    +int rating
+}
+
+class LeaderboardService {
+    -MatchRepository repo
+    +List<User> getTopPlayers(int limit)
+    +UserStats getUserStats(UUID userId)
+    +void updateRatingsAfterMatch(MatchSummary summary)
+}
+
+' --- RELATIONS ---
+
+' Domain
+GameState "1" *-- "6" Player
+Player "1" o-- "0..*" District : hand
+Player "1" o-- "0..*" District : city
+Player "1" o-- "0..*" District : destroyed
+Player "1" o-- "0..1" GameCharacter : role
+
+' Engine
+CitadelsEngine --> GameState : manages
+CitadelsEngine --> MoveValidator : uses
+CitadelsEngine ..> GameAction : executes
+CitadelsEngine ..> ProcessResult : returns
+GameAction ..> GameState : modifies
+GameState --> GamePhase : current
+GamePhase ..> GameState : transitions
+ProcessResult ..> GameEvent : contains
+
+' Initialization
+Lobby ..> Player : creates
+Lobby ..> GameState : creates
+GameState --> Settings : config
+Main --> Lobby : creates
+Main --> CitadelsEngine : creates
+Main --> CLISession : creates
+
+' CLI
+CLISession --> CitadelsEngine : drives
+CLISession --> CommandHandler : uses
+CLISession --> ParseResult : handles
+CLISession ..> GameEvent : formats
+CommandHandler ..> GameAction : parses
+CommandHandler --> GameState : reads
+CommandHandler ..> ParseResult : returns
+
+' Repository
+HistoryRecorder --> MatchRepository : persists
+InMemoryMatchRepository ..> MatchRepository : implements
+LeaderboardService --> MatchRepository : delegates
+
+@enduml
