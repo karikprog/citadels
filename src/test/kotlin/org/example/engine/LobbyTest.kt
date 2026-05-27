@@ -1,13 +1,15 @@
 package org.example.engine
 
+import org.example.utils.InMemoryMatchRepository
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class LobbyTest {
+    private val repo = InMemoryMatchRepository()
 
     @Test
     fun `addPlayer adds up to 6 players`() {
-        val lobby = Lobby()
+        val lobby = Lobby(repo)
         for (i in 1..6) {
             lobby.addPlayer("Player$i")
         }
@@ -16,7 +18,7 @@ class LobbyTest {
 
     @Test
     fun `addPlayer ignores 7th player`() {
-        val lobby = Lobby()
+        val lobby = Lobby(repo)
         for (i in 1..7) {
             lobby.addPlayer("Player$i")
         }
@@ -25,7 +27,7 @@ class LobbyTest {
 
     @Test
     fun `createGameState returns GameState with same players`() {
-        val lobby = Lobby()
+        val lobby = Lobby(repo)
         lobby.addPlayer("Alice")
         lobby.addPlayer("Bob")
         lobby.addPlayer("Charlie")
@@ -41,7 +43,7 @@ class LobbyTest {
 
     @Test
     fun `empty lobby creates empty game state`() {
-        val lobby = Lobby()
+        val lobby = Lobby(repo)
         val state = lobby.createGameState()
         assertEquals(0, state.players.size)
     }

@@ -1,7 +1,9 @@
 package org.example.cli
 
 import org.example.engine.*
+import org.example.repository.HistoryRecorder
 import org.example.repository.MatchRepository
+import java.util.UUID
 
 class CLISession(
     private val engine: CitadelsEngine,
@@ -9,6 +11,8 @@ class CLISession(
     repo: MatchRepository? = null
 ) {
     private val handler = CommandHandler(state, repo)
+    private val matchId = UUID.randomUUID()
+    private val recorder = repo?.let { HistoryRecorder(matchId, it) }
 
     fun start() {
         println("=== ЦИТАДЕЛИ: ЗАПУСК ===")
@@ -28,10 +32,14 @@ class CLISession(
                 is ParseResult.Error -> println("${parseResult.message}")
                 is ParseResult.Display -> println(parseResult.message)
                 is ParseResult.Success -> {
+                    val player = state.activePlayer
                     when (val result = engine.processAction(parseResult.action)) {
                         is ProcessResult.Valid -> {
                             result.events.forEach { println(formatEvent(it)) }
                             println("Действие успешно выполнено.")
+                            if (player != null) {
+                                recorder?.record(player, parseResult.action, input)
+                            }
                         }
                         is ProcessResult.Invalid -> {
                             println("Ошибка хода: ${result.reason}")
@@ -42,7 +50,7 @@ class CLISession(
         }
 
         println("=== ИГРА ЗАВЕРШЕНА ===")
-        val summary = handler.saveFinishedMatch()
+        val summary = handler.saveFinishedMatch(matchId)
         if (summary != null) {
             println("Результат сохранён.")
         }

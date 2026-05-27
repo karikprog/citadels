@@ -1,15 +1,15 @@
 package org.example.engine
 
-import java.util.UUID
+import org.example.repository.MatchRepository
 
-// В будущем тут будет обращение к базе данных и доставание пользователя либо его создание
-class Lobby {
+class Lobby(private val repo: MatchRepository) {
     private val _players = mutableListOf<Player>()
     val playersSize: Int get() = _players.size
 
     fun addPlayer(name: String) {
         if (_players.size < 6) {
-            val player = Player(UUID.randomUUID(), name)
+            val user = repo.getOrCreateUser(name)
+            val player = Player(user.id, name)
             _players.add(player)
         }
     }

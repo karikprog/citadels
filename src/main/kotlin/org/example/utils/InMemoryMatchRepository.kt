@@ -11,8 +11,8 @@ class InMemoryMatchRepository : MatchRepository {
     private val _replays = mutableMapOf<UUID, MutableList<String>>()
     private val _users = mutableMapOf<UUID, User>()
 
-    override fun saveRecordAction(matchId: UUID, actionDescription: String) {
-        _replays.getOrPut(matchId) { mutableListOf() }.add(actionDescription)
+    override fun saveRecordAction(matchId: UUID, playerId: UUID, actionType: String, actionCommand: String) {
+        _replays.getOrPut(matchId) { mutableListOf() }.add(actionCommand)
     }
 
     override fun saveCompletedMatch(matchId: UUID, summary: MatchSummary) {
@@ -29,7 +29,10 @@ class InMemoryMatchRepository : MatchRepository {
         return _replays[matchId]?.toList() ?: emptyList()
     }
 
-    override fun getOrCreateUser(id: UUID, name: String): User {
+    override fun getOrCreateUser(name: String): User {
+        val existing = findUserByName(name)
+        if (existing != null) return existing
+        val id = UUID.randomUUID()
         return _users.getOrPut(id) { User(id, name, 0, 0) }
     }
 
@@ -60,7 +63,7 @@ class InMemoryMatchRepository : MatchRepository {
 
     override fun updateRatingsAfterMatch(matchSummary: MatchSummary) {
         for ((playerId, playerName) in matchSummary.playerNames) {
-            val user = getOrCreateUser(playerId, playerName)
+            val user = getOrCreateUser(playerName)
             user.totalGames++
             if (playerId == matchSummary.winnerUserId) {
                 user.winGames++

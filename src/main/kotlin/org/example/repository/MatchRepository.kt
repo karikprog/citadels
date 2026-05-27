@@ -7,12 +7,12 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 interface MatchRepository {
-    fun saveRecordAction(matchId: UUID, actionDescription: String)
+    fun saveRecordAction(matchId: UUID, playerId: UUID, actionType: String, actionCommand: String)
     fun saveCompletedMatch(matchId: UUID, summary: MatchSummary)
     fun getMatchHistoryForUser(userId: UUID): List<MatchSummary>
     fun getMatchReplay(matchId: UUID): List<String>
 
-    fun getOrCreateUser(id: UUID, name: String): User
+    fun getOrCreateUser(name: String): User
     fun findUserByName(name: String): User?
     fun getTopPlayers(limit: Int): List<User>
     fun getUserStats(userId: UUID): UserStats
@@ -20,8 +20,13 @@ interface MatchRepository {
 }
 
 class HistoryRecorder(private val matchId: UUID, private val repo: MatchRepository) {
-    fun record(player: Player, action: GameAction) {
-        repo.saveRecordAction(matchId, "${player.name}: ${action::class.simpleName ?: "UnknownAction"}")
+    fun record(player: Player, action: GameAction, command: String) {
+        repo.saveRecordAction(
+            matchId,
+            player.id,
+            action::class.simpleName ?: "UnknownAction",
+            command
+        )
     }
 }
 
