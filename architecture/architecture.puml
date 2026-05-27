@@ -145,6 +145,7 @@ class Settings {
 }
 
 class Lobby {
+    -MatchRepository repo
     +int playersSize
     +void addPlayer(String name)
     +GameState createGameState()
@@ -262,6 +263,8 @@ class CLISession {
     -CitadelsEngine engine
     -GameState state
     -CommandHandler handler
+    -UUID matchId
+    -HistoryRecorder recorder
     +void start()
     -void printGameState()
     -void formatEvent(GameEvent event)
@@ -287,18 +290,18 @@ ExitParse --|> ParseResult
 class CommandHandler {
     -GameState state
     +ParseResult parse(String input)
-    +MatchSummary saveFinishedMatch()
+    +MatchSummary saveFinishedMatch(UUID matchId)
     -String buildGameStats()
 }
 
 ' --- Repository & Users ---
 
 interface MatchRepository {
-    +void saveRecordAction(UUID matchId, String actionDescription)
+    +void saveRecordAction(UUID matchId, UUID playerId, String actionType, String actionCommand)
     +void saveCompletedMatch(UUID matchId, MatchSummary summary)
     +List[MatchSummary] getMatchHistoryForUser(UUID userId)
     +List[String] getMatchReplay(UUID matchId)
-    +User getOrCreateUser(UUID id, String name)
+    +User getOrCreateUser(String name)
     +User findUserByName(String name)
     +List[User] getTopPlayers(int limit)
     +UserStats getUserStats(UUID userId)
@@ -311,10 +314,15 @@ class InMemoryMatchRepository implements MatchRepository {
     -Map[UUID, User] users
 }
 
+class SqliteMatchRepository implements MatchRepository {
+    -Connection connection
+    +void close()
+}
+
 class HistoryRecorder {
     -UUID matchId
     -MatchRepository repo
-    +void record(Player player, GameAction action)
+    +void record(Player player, GameAction action, String command)
 }
 
 class MatchSummary {
@@ -339,13 +347,6 @@ class UserStats {
     +int winGames
     +int losses
     +int rating
-}
-
-class LeaderboardService {
-    -MatchRepository repo
-    +List[User] getTopPlayers(int limit)
-    +UserStats getUserStats(UUID userId)
-    +void updateRatingsAfterMatch(MatchSummary summary)
 }
 
 ' --- RELATIONS ---
@@ -387,6 +388,9 @@ CommandHandler ..> ParseResult : returns
 ' Repository
 HistoryRecorder --> MatchRepository : persists
 InMemoryMatchRepository ..> MatchRepository : implements
-LeaderboardService --> MatchRepository : delegates
+SqliteMatchRepository ..> MatchRepository : implements
+
+Lobby --> MatchRepository : uses
+CLISession --> HistoryRecorder : records
 
 @enduml

@@ -35,19 +35,19 @@ class CommandHandler(
         }
     }
 
-    fun saveFinishedMatch(): MatchSummary? {
+    fun saveFinishedMatch(matchId: UUID): MatchSummary? {
         val repo = this._repo ?: return null
         if (!_state.gameOver) return null
 
         val scores = _state.players.associate { it.id to it.getScore() }
         val winner = _state.players.maxBy { it.getScore() }
         val summary = MatchSummary(
-            matchId = UUID.randomUUID(),
+            matchId = matchId,
             winnerUserId = winner.id,
             finalScore = scores,
             playerNames = _state.players.associate { it.id to it.name }
         )
-        repo.saveCompletedMatch(summary.matchId, summary)
+        repo.saveCompletedMatch(matchId, summary)
         repo.updateRatingsAfterMatch(summary)
         return summary
     }

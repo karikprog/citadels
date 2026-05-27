@@ -2,13 +2,14 @@ package org.example
 
 import org.example.cli.CLISession
 import org.example.engine.*
+import org.example.repository.MatchRepository
 import org.example.repository.MatchSummary
-import org.example.utils.InMemoryMatchRepository
 import org.example.utils.Settings
+import org.example.utils.SqliteMatchRepository
 
 
 fun main() {
-    val repo = InMemoryMatchRepository()
+    val repo: MatchRepository = SqliteMatchRepository()
 
     while (true) {
         println("\n=== ЦИТАДЕЛИ ===")
@@ -29,9 +30,9 @@ fun main() {
     }
 }
 
-private fun startNewGame(repo: InMemoryMatchRepository) {
+private fun startNewGame(repo: MatchRepository) {
     println("\n=== ПОДГОТОВКА К ИГРЕ: ЛОББИ ===")
-    val lobby = Lobby()
+    val lobby = Lobby(repo)
 
     while (true) {
         if (lobby.playersSize < 6) {
@@ -76,7 +77,7 @@ private fun startNewGame(repo: InMemoryMatchRepository) {
     session.start()
 }
 
-private fun showUserStats(repo: InMemoryMatchRepository) {
+private fun showUserStats(repo: MatchRepository) {
     print("Введите имя пользователя: ")
     val name = readlnOrNull()?.trim() ?: return
     if (name.isBlank()) {
